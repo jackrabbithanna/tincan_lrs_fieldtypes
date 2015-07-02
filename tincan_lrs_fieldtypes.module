@@ -1,0 +1,1632 @@
+<?php
+
+/**
+ * Implements hook_menu().
+  * code example taken from https://www.drupal.org/project/multiple_fields_remove_button module
+ */
+function tincan_lrs_fieldtypes_menu() {
+  $items = array();
+  $items['tincan_lrs_fieldtypes_multiple_fields_remove_button/ajax'] = array(
+    'title' => 'Remove item callback',
+    'page callback' => 'tincan_lrs_fieldtypes_multiple_fields_remove_button_js',
+    'delivery callback' => 'ajax_deliver',
+    'access callback' => TRUE,
+    'theme callback' => 'ajax_base_page_theme',
+    'type' => MENU_CALLBACK,
+  );
+    
+    return $items;
+}
+
+/**
+ * Page callback for tincan_lrs_fieldtypes_multiple_fields_remove_button/ajax path.
+ * code example taken from https://www.drupal.org/project/multiple_fields_remove_button module
+ */
+function tincan_lrs_fieldtypes_multiple_fields_remove_button_js() {
+     if (isset($_POST['ajax_html_ids'])) {
+    unset($_POST['ajax_html_ids']);
+  }
+ 
+  list($form, $form_state) = ajax_get_form();
+  drupal_process_form($form['#form_id'], $form, $form_state);
+  // Get the information on what we're removing.
+  $button = $form_state['triggering_element'];
+  // Go two levels up in the form, to the whole widget.
+  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -3));
+  // Now send back the proper AJAX command to replace it.
+  $return = array(
+    '#type' => 'ajax',
+    '#commands' => array(
+      ajax_command_replace('#' . $element['#id'], drupal_render($element)),
+    ),
+  );
+
+  // Because we're doing this ourselves, messages aren't automatic. We have
+  // to add them.
+  $messages = theme('status_messages');
+  if ($messages) {
+    $return['#commands'][] = ajax_command_prepend('#' . $element['#id'], $messages);
+  }
+
+  return $return;
+}
+
+/**
+ * Implements hook_field_schema().
+ */
+function tincan_lrs_fieldtypes_field_schema($field) {
+// Define schema for a Tincan Verb field
+  if($field['type'] == 'tincan_verb') {
+    $columns = array(
+        'id' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+        'display' => array(
+          'type' => 'blob',
+          'size' => 'normal', 
+          'not null' => FALSE,
+        ),
+        'display_en_us' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+        'json' => array(
+          'type' => 'blob',
+          'size' => 'normal', 
+          'not null' => FALSE,
+        ),
+      );
+    return array(
+      'columns' => $columns,
+      'indexes' => array(
+        'id' => array('id'),
+        'display_en_us' => array('display_en_us'),
+      ),
+    );
+  } // end if type is tincan_verb
+  
+  // Define Schema for Tincan Results field type
+  if($field['type'] == 'tincan_result') {
+    $columns = array(
+        'score_scaled' => array(
+          'type' => 'numeric',
+          'precision' => '10',
+          'scale' => '8',
+          'not null' => FALSE,
+          'default_value' => NULL,
+        ),
+        'score_raw' => array(
+          'type' => 'numeric',
+          'precision' => '10',
+          'scale' => '2',
+          'not null' => FALSE,
+        ),
+        'score_min' => array(
+          'type' => 'numeric',
+          'precision' => '10',
+          'scale' => '2',
+          'not null' => FALSE,
+        ),
+         'score_max' => array(
+          'type' => 'numeric',
+          'precision' => '10',
+          'scale' => '2',
+          'not null' => FALSE,
+        ),
+        'score_json' => array(
+          'type' => 'blob',
+          'size' => 'normal', 
+          'not null' => FALSE,
+        ),
+        'success' => array(
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => FALSE,
+        ),
+        'completion' => array(
+          'type' => 'int',
+          'size' => 'tiny', 
+          'not null' => FALSE,
+        ),
+        'response' => array(
+          'type' => 'blob',
+          'size' => 'normal',
+          'not null' => FALSE,
+        ),
+        'duration' => array(
+          'type' => 'varchar',
+          'length' => '100',
+          'not null' => FALSE,
+        ),
+        'extensions' => array(
+          'type' => 'blob',
+          'size' => 'normal', 
+          'not null' => FALSE,
+        ),
+        'json' => array(
+          'type' => 'blob',
+          'size' => 'normal', 
+          'not null' => FALSE,
+        ),
+      );
+    return array(
+      'columns' => $columns,
+      'indexes' => array(
+        'success' => array('success'),
+        'completion' => array('completion'),
+      ),
+    );
+  } // end if type is tincan_result
+  
+  // Define schema for a Tincan Interaction Component field
+  if($field['type'] == 'tincan_interaction_component') {
+    $columns = array(
+        'id' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+        'description' => array(
+          'type' => 'blob',
+          'size' => 'normal', 
+          'not null' => FALSE,
+        ),
+        'description_en_us' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
+        'json' => array(
+          'type' => 'blob',
+          'size' => 'normal', 
+          'not null' => FALSE,
+        ),
+      );
+    return array(
+      'columns' => $columns,
+      'indexes' => array(
+        'id' => array('id'),
+        'description_en_us' => array('description_en_us'),
+      ),
+    );
+  } // end if type is tincan_interaction_component_choices
+  
+   
+  // Define schema for Tincan statement context field
+    if($field['type'] == 'tincan_context') {
+    $columns = array(
+        'registration' => array(
+          'type' => 'varchar',
+          'length' => 128,
+          'not null' => FALSE,
+        ),
+        'revision' => array(
+          'type' => 'varchar',
+          'length' => 255, 
+          'not null' => FALSE,
+        ),
+        'platform' => array(
+          'type' => 'varchar',
+          'length' => 255, 
+          'not null' => FALSE,
+        ),
+        'language' => array(
+          'type' => 'varchar',
+          'length' => 60, 
+          'not null' => FALSE,
+        ),
+        'statement_reference_object_type' => array(
+          'type' => 'varchar',
+          'length' => 15,
+          'not null' => FALSE,
+          'default_value' => 'StatementRef',
+        ),
+        'statement_reference_statement_id' => array(
+          'type' => 'varchar',
+          'length' => 128,
+          'not null' => FALSE,
+        ),
+        'extensions' => array(
+          'type' => 'blob',
+          'size' => 'normal', 
+          'not null' => FALSE,
+        ),
+        'context_activities_json' => array(
+          'type' => 'blob',
+          'size' => 'normal', 
+          'not null' => FALSE,
+        ),
+        'json' => array(
+          'type' => 'blob',
+          'size' => 'normal', 
+          'not null' => FALSE,
+        ),
+      );
+    return array(
+      'columns' => $columns,
+      'indexes' => array(
+        'registration' => array('registration'),
+      ),
+    );
+  } // end if type is tincan_context
+  
+   // Define schema for Tincan statement object field
+    if($field['type'] == 'tincan_object') {
+    $columns = array(
+        'object_type' => array(
+          'type' => 'varchar',
+          'length' => 25,
+          'not null' => TRUE,
+        ),
+        'table' => array(
+          'type' => 'varchar',
+          'length' => 50, 
+          'not null' => TRUE,
+        ),
+        'target_id' => array(
+          'type' => 'varchar',
+          'length' => '100', 
+          'not null' => TRUE,
+        ),
+        'json' => array(
+          'type' => 'blob',
+          'size' => 'normal', 
+          'not null' => FALSE,
+        ),
+      );
+    return array(
+      'columns' => $columns,
+      'indexes' => array(
+        'target_id' => array('target_id'),
+      ),
+    );
+  } // end if type is tincan_object
+}
+
+
+/**
+ * Implements hook_field_presave().
+ */
+function tincan_lrs_fieldtypes_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  if ($field ['type'] == 'tincan_result') {
+    foreach ($items as $delta => $item) {
+      if (isset($item['score_scaled']) && $item['score_scaled'] == '') {
+         $items[$delta]['score_scaled'] = NULL; 
+      }
+      if (isset($item['score_raw']) && $item['score_raw'] == '') {
+         $items[$delta]['score_raw'] = NULL; 
+      }
+      if (isset($item['score_min']) && $item['score_min'] == '') {
+         $items[$delta]['score_min'] = NULL; 
+      }
+      if (isset($item['score_max']) && $item['score_max'] == '') {
+         $items[$delta]['score_max'] = NULL; 
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_field_info().
+ */
+function tincan_lrs_fieldtypes_field_info() {
+  return array(
+    // Tincan Statement Verb
+    'tincan_verb' => array(
+      'label' => t('Tincan Verb'),
+      'description' => t('A TinCan Statement verb.'),
+      'settings' => array(),
+      'instance_settings' => array(
+        'text_processing' => 0,
+      ),
+      'default_widget' => 'tincan_verb_widget',
+      'default_formatter' => 'tincan_verb_formatter',
+      // 'no_ui' => TRUE, //A boolean specifying that users should not be allowed to create fields and instances of this field type through the UI. Such fields can only be created programmatically with field_create_field() and field_create_instance(). Defaults to FALSE
+    ),
+    // Tincan Statement Result
+    'tincan_result' => array(
+      'label' => t('Tincan Result'),
+      'description' => t('A Tincan Statement result.'),
+      'settings' => array(),
+      'instance_settings' => array(
+        'text_processing' => 0,
+      ),
+      'default_widget' => 'tincan_result_widget',
+      'default_formatter' => 'tincan_result_formatter',
+      // 'no_ui' => TRUE,
+    ),
+    
+    //tincan_interaction_component_choices
+    'tincan_interaction_component' => array(
+      'label' => t('Tincan Interaction Component'),
+      'description' => t('A Tincan Statement activity interaction component field.'),
+      'settings' => array(),
+      'instance_settings' => array(
+        'text_processing' => 0,
+      ),
+      'default_widget' => 'tincan_interaction_component_widget',
+      'default_formatter' => 'tincan_interaction_component_formatter',
+      // 'no_ui' => TRUE,
+    ),
+        
+    // Tincan Statement Context
+    'tincan_context' => array(
+      'label' => t('Tincan Context'),
+      'description' => t('A Tincan Statement context.'),
+      'settings' => array(),
+      'instance_settings' => array(
+        'text_processing' => 0,
+      ),
+      'default_widget' => 'tincan_context_widget',
+      'default_formatter' => 'tincan_context_formatter',
+      // 'no_ui' => TRUE,
+    ),
+    
+    // Tincan Statement Object
+    'tincan_object' => array(
+      'label' => t('Tincan Object'),
+      'description' => t('A Tincan Statement object.'),
+      'settings' => array(),
+      'instance_settings' => array(
+        'text_processing' => 0,
+      ),
+      'default_widget' => 'tincan_object_widget',
+      'default_formatter' => 'tincan_object_formatter',
+      // 'no_ui' => TRUE,
+    ),
+  );
+  
+  
+}
+
+/**
+ * Implements hook_field_is_empty().
+ */
+function tincan_lrs_fieldtypes_field_is_empty($item, $field) {
+ 
+  switch($field['type']) {
+    case 'tincan_verb':
+      return empty($item['id']) && (string) $item['id'] !== '0';
+    case 'tincan_result':
+      return empty($item['score_scaled']) &&  empty($item['score_raw']) &&  empty($item['score_min']) &&  empty($item['score_max']) &&  empty($item['success']) &&  empty($item['completion']) &&  empty($item['response']) &&  empty($item['duration']);
+    case 'tincan_context':
+      return empty($item['registration']) && empty($item['revision']) && empty($item['platform']) && empty($item['language']) && empty($item['statement_reference_object_type']) && empty($item['statement_reference_statement_id']) && empty($item['extensions']) && empty($item['context_activities_json']) && empty($item['json']);
+    case 'tincan_interaction_component':
+      return empty($item['id']) && (string) $item['id'] !== '0';
+    case 'tincan_object':
+      return empty($item['object_type']) || empty($item['table']) || empty($item['target_id']);
+  }
+  
+}
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function tincan_lrs_fieldtypes_field_widget_info() {
+  return array(
+    // Tincan Verb Widget
+    'tincan_verb_widget' => array(
+      'label' => t('Tincan Verb'),
+      'field types' => array('tincan_verb'),
+      'settings' => array(),
+      'behaviors' => array(
+        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
+        'default value' => FIELD_BEHAVIOR_DEFAULT,
+      ),
+    ), //end tincan verb widget
+    
+    // Tincan Result widget
+    'tincan_result_widget' => array(
+      'label' => t('Tincan Result'),
+      'field types' => array('tincan_result'),
+      'settings' => array(),
+      'behaviors' => array(
+        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
+        'default value' => FIELD_BEHAVIOR_DEFAULT,
+      ),
+    ), //end tincan result widget
+    
+    // Tincan Interaction component widget
+    'tincan_interaction_component_widget' => array(
+      'label' => t('Tincan Interaction Component'),
+      'field types' => array('tincan_interaction_component',),
+      'settings' => array(),
+      'behaviors' => array(
+        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
+        'default value' => FIELD_BEHAVIOR_DEFAULT,
+      ),
+    ), //end tincan result widget
+    
+    // Tincan Context widget
+    'tincan_context_widget' => array(
+      'label' => t('Tincan Context'),
+      'field types' => array('tincan_context'),
+      'settings' => array(),
+      'behaviors' => array(
+        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
+        'default value' => FIELD_BEHAVIOR_DEFAULT,
+      ),
+    ), //end tincan context widget
+    
+    // Tincan Object widget
+    'tincan_object_widget' => array(
+      'label' => t('Tincan Object'),
+      'field types' => array('tincan_object'),
+      'settings' => array(),
+      'behaviors' => array(
+        'multiple values' => FIELD_BEHAVIOR_DEFAULT,
+        'default value' => FIELD_BEHAVIOR_DEFAULT,
+      ),
+    ), //end tincan object widget
+  );
+}
+
+/**
+ * Implements hook_field_widget_form().
+ */
+function tincan_lrs_fieldtypes_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $orig_element = $element;
+  switch ($instance['widget']['type']) {
+   // Tincan Verb Widget
+    case 'tincan_verb_widget':
+      $id_widget = array();
+      $id_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['id']) ? $items[$delta]['id'] : NULL,
+       // '#element_validate' => '_tincan_lrs_verb_field_validate',
+        //'#disabled' => TRUE,
+      );
+      $id_widget['#title'] = t('Verb ID');
+      $id_widget['#weight'] = 0;
+      
+      $display_english_widget = array();
+      $display_english_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['display_en_us']) ? $items[$delta]['display_en_us'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $display_english_widget['#title'] = t('Verb English Display Value');
+      $display_english_widget['#weight'] = 1;
+      
+      $display_widget = array();
+      $display_widget = $orig_element + array(
+        '#type' => 'textarea',
+        '#default_value' => isset($items[$delta]['display']) ? $items[$delta]['display'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $display_widget['#title'] = t('Verb Display Array');
+      $display_widget['#weight'] = 2;
+      
+      $json_widget = array();
+      $json_widget = $orig_element + array(
+        '#type' => 'textarea',
+        '#default_value' => isset($items[$delta]['json']) ? $items[$delta]['json'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $json_widget['#title'] = t('Verb JSON');
+      $json_widget['#weight'] = 3;
+      
+      $element['id'] = $id_widget;
+      $element['display_en_us'] = $display_english_widget;
+      $element['display'] = $display_widget;
+      $element['json'] = $json_widget;
+      
+    break;
+
+    // Tincan Statement Result Widget
+    case 'tincan_result_widget':
+      $score_scaled_widget = array();
+      $score_scaled_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['score_scaled']) ? $items[$delta]['score_scaled'] : NULL,
+        //'#disabled' => TRUE,
+      );
+      $score_scaled_widget['#title'] = t('Score Scaled');
+      $score_scaled_widget['#weight'] = 0;
+      
+      $score_raw_widget = array();
+      $score_raw_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['score_raw']) ? $items[$delta]['score_raw'] : NULL,
+        //'#disabled' => TRUE,
+      );
+      $score_raw_widget['#title'] = t('Score - Raw');
+      $score_raw_widget['#weight'] = 1;
+      
+      $score_min_widget = array();
+      $score_min_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['score_min']) ? $items[$delta]['score_min'] : NULL,
+        //'#disabled' => TRUE,
+      );
+      $score_min_widget['#title'] = t('Score - Minimum');
+      $score_min_widget['#weight'] = 2;
+      
+      $score_max_widget = array();
+      $score_max_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['score_max']) ? $items[$delta]['score_max'] : NULL,
+        //'#disabled' => TRUE,
+      );
+      $score_max_widget['#title'] = t('Score - Maximum');
+      $score_max_widget['#weight'] = 3;
+      
+      $score_json_widget = array();
+      $score_json_widget = $orig_element + array(
+        '#type' => 'textarea',
+        '#default_value' => isset($items[$delta]['score_json']) ? $items[$delta]['score_json'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $score_json_widget['#title'] = t('Score JSON');
+      $score_json_widget['#weight'] = 4;
+      
+      $success_widget = array();
+      $success_widget = $orig_element + array(
+        '#type' => 'select',
+        '#default_value' => isset($items[$delta]['success']) ? $items[$delta]['success'] : NULL,
+        '#options' => array(0 => t('False'), 1 => t('True')),
+        //'#disabled' => TRUE,
+      );
+      $success_widget['#title'] = t('Success');
+      $success_widget['#weight'] = 5;
+      
+      $completion_widget = array();
+      $completion_widget = $orig_element + array(
+        '#type' => 'select',
+        '#default_value' => isset($items[$delta]['completion']) ? $items[$delta]['completion'] : NULL,
+        '#options' => array(0 => t('False'), 1 => t('True')),
+        //'#disabled' => TRUE,
+      );
+      $completion_widget['#title'] = t('Completion');
+      $completion_widget['#weight'] = 6;
+      
+      $response_widget = array();
+      $response_widget = $orig_element + array(
+        '#type' => 'textarea',
+        '#default_value' => isset($items[$delta]['response']) ? $items[$delta]['response'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $response_widget['#title'] = t('Response');
+      $response_widget['#weight'] = 7;
+      
+      $duration_widget = array();
+      $duration_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['duration']) ? $items[$delta]['duration'] : NULL,
+        //'#disabled' => TRUE,
+      );
+      $duration_widget['#title'] = t('Duration');
+      $duration_widget['#weight'] = 8;
+      
+      $extensions_widget = array();
+      $extensions_widget = $orig_element + array(
+        '#type' => 'textarea',
+        '#default_value' => isset($items[$delta]['extensions']) ? $items[$delta]['extensions'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $extensions_widget['#title'] = t('Extensions');
+      $extensions_widget['#weight'] = 9;
+      
+      $json_widget = array();
+      $json_widget = $orig_element + array(
+        '#type' => 'textarea',
+        '#default_value' => isset($items[$delta]['json']) ? $items[$delta]['json'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $json_widget['#title'] = t('Result JSON');
+      $json_widget['#weight'] = 10;
+      
+      $element['score_scaled'] = $score_scaled_widget;
+      $element['score_raw'] = $score_raw_widget;
+      $element['score_min'] = $score_min_widget;
+      $element['score_max'] = $score_max_widget;
+      $element['score_json'] = $score_json_widget;
+      $element['success'] = $success_widget;
+      $element['completion'] = $completion_widget;
+      $element['response'] = $response_widget;
+      $element['duration'] = $duration_widget;
+      $element['extensions'] = $extensions_widget;
+      $element['json'] = $json_widget;
+      
+      break;
+    // Tincan statement context widget  
+    case 'tincan_context_widget':
+      $registration_widget = array();
+      $registration_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['registration']) ? $items[$delta]['registration'] : NULL,
+        //'#disabled' => TRUE,
+      );
+      $registration_widget['#title'] = t('Context Registration');
+      $registration_widget['#weight'] = 0;
+      
+      $revision_widget = array();
+      $revision_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['revision']) ? $items[$delta]['revision'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $revision_widget['#title'] = t('Context Revision');
+      $revision_widget['#weight'] = 1;
+      
+      $platform_widget = array();
+      $platform_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['platform']) ? $items[$delta]['platform'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $platform_widget['#title'] = t('Platform');
+      $platform_widget['#weight'] = 2;
+      
+      $language_widget = array();
+      $language_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['language']) ? $items[$delta]['language'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $language_widget['#title'] = t('Language');
+      $language_widget['#weight'] = 3;
+      
+      $statement_reference_object_type_widget = array();
+      $statement_reference_object_type_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['statement_reference_object_type']) ? $items[$delta]['statement_reference_object_type'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $statement_reference_object_type_widget['#title'] = t('Statement Reference Object Type');
+      $statement_reference_object_type_widget['#weight'] = 4;
+      
+      $statement_reference_statement_id_widget = array();
+      $statement_reference_statement_id_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['statement_reference_statement_id']) ? $items[$delta]['statement_reference_statement_id'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $statement_reference_statement_id_widget['#title'] = t('Statement Reference Statement ID');
+      $statement_reference_statement_id_widget['#weight'] = 5;
+      
+      $extensions_widget = array();
+      $extensions_widget = $orig_element + array(
+        '#type' => 'textarea',
+        '#default_value' => isset($items[$delta]['extensions']) ? $items[$delta]['extensions'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $extensions_widget['#title'] = t('Extensions');
+      $extensions_widget['#weight'] = 6;
+      
+      $context_activities_json_widget = array();
+      $context_activities_json_widget = $orig_element + array(
+        '#type' => 'textarea',
+        '#default_value' => isset($items[$delta]['context_activities_json']) ? $items[$delta]['context_activities_json'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $context_activities_json_widget['#title'] = t('Context Activities JSON');
+      $context_activities_json_widget['#weight'] = 7;
+      
+      $json_widget = array();
+      $json_widget = $orig_element + array(
+        '#type' => 'textarea',
+        '#default_value' => isset($items[$delta]['json']) ? $items[$delta]['json'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $json_widget['#title'] = t('Context JSON');
+      $json_widget['#weight'] = 8;
+      
+      $element['registration'] = $registration_widget;
+      $element['revision'] = $revision_widget;
+      $element['platform'] = $platform_widget;
+      $element['language'] = $language_widget;
+      $element['statement_reference_object_type'] = $statement_reference_object_type_widget;
+      $element['statement_reference_statement_id'] = $statement_reference_statement_id_widget;
+      $element['extensions'] = $extensions_widget;
+      $element['context_activities_json'] = $context_activities_json_widget;
+      $element['json'] = $json_widget;
+    break;
+    // Tincan Interaction Component Widget
+    case 'tincan_interaction_component_widget':
+      $id_widget = array();
+      $id_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['id']) ? $items[$delta]['id'] : NULL,
+       // '#element_validate' => '_tincan_lrs_verb_field_validate',
+        //'#disabled' => TRUE,
+      );
+      $id_widget['#title'] = t('ID');
+      $id_widget['#weight'] = 0;
+      
+      $description_english_widget = array();
+      $description_english_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['description_en_us']) ? $items[$delta]['description_en_us'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $description_english_widget['#title'] = t('Description English Value');
+      $description_english_widget['#weight'] = 1;
+      
+      $description_widget = array();
+      $description_widget = $orig_element + array(
+        '#type' => 'textarea',
+        '#default_value' => isset($items[$delta]['description']) ? $items[$delta]['description'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $description_widget['#title'] = t('Description Array');
+      $description_widget['#weight'] = 2;
+      
+      $json_widget = array();
+      $json_widget = $orig_element + array(
+        '#type' => 'textarea',
+        '#default_value' => isset($items[$delta]['json']) ? $items[$delta]['json'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $json_widget['#title'] = t('Interaction Component JSON');
+      $json_widget['#weight'] = 3;
+      
+      $element['id'] = $id_widget;
+      $element['description_en_us'] = $description_english_widget;
+      $element['description'] = $description_widget;
+      $element['json'] = $json_widget;
+      
+    break;
+    // Tincan Object Widget
+    case 'tincan_object_widget':
+      $object_type_widget = array();
+      $object_type_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['object_type']) ? $items[$delta]['object_type'] : NULL,
+        //'#disabled' => TRUE,
+      );
+      $object_type_widget['#title'] = t('Object Type');
+      $object_type_widget['#weight'] = 0;
+      
+      $table_widget = array();
+      $table_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['table']) ? $items[$delta]['table'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $table_widget['#title'] = t('Referenced Entity Table');
+      $table_widget['#weight'] = 1;
+      
+      $target_id_widget = array();
+      $target_id_widget = $orig_element + array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['target_id']) ? $items[$delta]['target_id'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $target_id_widget['#title'] = t('Referenced Entity ID');
+      $target_id_widget['#weight'] = 2;
+      
+      $json_widget = array();
+      $json_widget = $orig_element + array(
+        '#type' => 'textarea',
+        '#default_value' => isset($items[$delta]['json']) ? $items[$delta]['json'] : NULL,
+       // '#disabled' => TRUE,
+      );
+      $json_widget['#title'] = t('Object JSON');
+      $json_widget['#weight'] = 3;
+      
+      $element['object_type'] = $object_type_widget;
+      $element['table'] = $table_widget;
+      $element['target_id'] = $target_id_widget;
+      $element['json'] = $json_widget;
+      
+    break;
+  }
+  
+  // add remove button for fields with unlimited field values  
+  // code example taken from https://www.drupal.org/project/multiple_fields_remove_button module
+  $field_parents = isset($element['#field_parents']) ? $element['#field_parents'] : array();
+  $field_name = isset($element['#field_name']) ? $element['#field_name'] : NULL;
+  
+  $parents = array_merge(
+    $field_parents,
+    array($field_name, $langcode,$delta));
+  
+  if($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED) {
+    $element['remove_button'] = array(
+      '#delta' => $delta,
+      '#name' => implode('_', $parents) . '_remove_button',
+      '#type' => 'submit',
+      '#value' => t('Remove'),
+      '#validate' => array(),
+      '#attributes' => array('class' => array('multiple-fields-remove-button')),
+      '#submit' => array('_tincan_lrs_fieldtypes_remove_button_submit_handler'),
+      '#limit_validation_errors' => array(),
+      '#ajax' => array(
+        'path' => 'tincan_lrs_fieldtypes_multiple_fields_remove_button/ajax',
+        'effect' => 'fade',
+      ),
+      '#weight' => 1000,
+    );
+  }
+  
+  return $element;
+}
+
+/**
+ * Submit callback to remove an item from the field UI multiple wrapper.
+ *
+ * code example taken from https://www.drupal.org/project/multiple_fields_remove_button module
+ *
+ * When a remove button is submitted, we need to find the item that it
+ * referenced and delete it. Since field UI has the deltas as a straight
+ * unbroken array key, we have to renumber everything down. Since we do this
+ * we *also* need to move all the deltas around in the $form_state['values']
+ * and $form_state['input'] so that user changed values follow. This is a bit
+ * of a complicated process.
+ */
+function _tincan_lrs_fieldtypes_remove_button_submit_handler($form, &$form_state) {
+  $button = $form_state['triggering_element'];
+  $delta = $button['#delta'];
+  $inpt = 'input';
+  // Where in the form we'll find the parent element.
+  $address = array_slice($button['#array_parents'], 0, -2);
+
+  // Go one level up in the form, to the widgets container.
+  $parent_element = drupal_array_get_nested_value($form, $address);
+  $field_name = $parent_element['#field_name'];
+  $langcode = $parent_element['#language'];
+  $parents = $parent_element['#field_parents'];
+
+  $field_state = field_form_get_state($parents, $field_name, $langcode, $form_state);
+
+  // Go ahead and renumber everything from our delta to the last
+  // item down one. This will overwrite the item being removed.
+  for ($i = $delta; $i <= $field_state['items_count']; $i++) {
+    $old_element_address = array_merge($address, array($i + 1));
+    $new_element_address = array_merge($address, array($i));
+
+    $moving_element = drupal_array_get_nested_value($form, $old_element_address);
+    $moving_element_value = drupal_array_get_nested_value($form_state['values'], $old_element_address);
+    $moving_element_input = drupal_array_get_nested_value($form_state[$inpt], $old_element_address);
+
+    // Tell the element where it's being moved to.
+    $moving_element['#parents'] = $new_element_address;
+
+    // Move the element around.
+    form_set_value($moving_element, $moving_element_value, $form_state);
+    drupal_array_set_nested_value($form_state[$inpt], $moving_element['#parents'], $moving_element_input);
+
+    // Move the entity in our saved state.
+    if (isset($field_state['entity'][$i + 1])) {
+      $field_state['entity'][$i] = $field_state['entity'][$i + 1];
+    }
+    else {
+      unset($field_state['entity'][$i]);
+    }
+  }
+
+  // Replace the deleted entity with an empty one. This helps to ensure that
+  // trying to add a new entity won't ressurect a deleted entity
+  // from thev trash bin.
+  // $count = count($field_state['entity']);
+  // Then remove the last item. But we must not go negative.
+  if ($field_state['items_count'] > 0) {
+    $field_state['items_count']--;
+  }
+
+  // Fix the weights. Field UI lets the weights be in a range of
+  // (-1 * item_count) to (item_count). This means that when we remove one,
+  // the range shrinks; weights outside of that range then get set to
+  // the first item in the select by the browser, floating them to the top.
+  // We use a brute force method because we lost weights on both ends
+  // and if the user has moved things around, we have to cascade because
+  // if I have items weight weights 3 and 4, and I change 4 to 3 but leave
+  // the 3, the order of the two 3s now is undefined and may not match what
+  // the user had selected.
+  $input = drupal_array_get_nested_value($form_state[$inpt], $address);
+  // Sort by weight.
+  uasort($input, '_field_sort_items_helper');
+
+  // Reweight everything in the correct order.
+  $weight = -1 * $field_state['items_count'];
+  foreach ($input as $key => $item) {
+    if ($item) {
+      $input[$key]['_weight'] = $weight++;
+    }
+  }
+  drupal_array_set_nested_value($form_state[$inpt], $address, $input);
+  field_form_set_state($parents, $field_name, $langcode, $form_state, $field_state);
+
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function tincan_lrs_fieldtypes_field_formatter_info() {
+  return array(
+    // Tincan Verb Formatter
+    'tincan_verb_formatter' => array( // Machine name of the formatter
+      'label' => t('Tincan Verb'),
+      'field types' => array('tincan_verb'), 
+      'settings'  => array( // Array of the settings we'll create
+         'data_display' => 'display_en_us', 
+      ),
+    ),
+    
+    // Tincan Result Formatter
+    'tincan_result_formatter' => array( // Machine name of the formatter
+      'label' => t('Tincan Result'),
+      'field types' => array('tincan_result'), 
+      'settings'  => array( // Array of the settings we'll create
+         'data_display' => 'all',
+         'duration_format' => 'minutes', 
+      ),
+    ),
+    
+    // Tincan Interaction Component Formatter
+    'tincan_interaction_component_formatter' => array( // Machine name of the formatter
+      'label' => t('Tincan Interaction Component'),
+      'field types' => array('tincan_interaction_component',), 
+      'settings'  => array( // Array of the settings we'll create
+         'data_display' => 'all',
+      ),
+    ),
+    
+    // Tincan Context Formatter
+    'tincan_context_formatter' => array( // Machine name of the formatter
+      'label' => t('Tincan Context'),
+      'field types' => array('tincan_context'), 
+      'settings'  => array( // Array of the settings we'll create
+         'data_display' => 'all',
+       ),
+    ),
+    
+    // Tincan Object Formatter
+    'tincan_object_formatter' => array( // Machine name of the formatter
+      'label' => t('Tincan Object'),
+      'field types' => array('tincan_object'), 
+      'settings'  => array( // Array of the settings we'll create
+         'data_display' => 'all',
+       ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function tincan_lrs_fieldtypes_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  // Tincan Verb
+  if($field['type'] == 'tincan_verb') {
+    //This gets the view_mode where our settings are stored
+    $display = $instance['display'][$view_mode];
+    // This gets the actual settings
+    $settings = $display['settings'];
+    // Initialize the element variable
+    $element = array();
+    // Add your select box
+    $element['data_display'] = array(
+      '#type'           => 'select',                           // Use a select box widget
+      '#title'          => t('Data to Display'),                   // Widget label
+      '#description'    => t('Select which part of the verb object to display'), // Helper text
+      '#default_value'  => isset($settings['data_display']) ? $settings['data_display'] : 'all',              // Get the value if it's already been set
+      '#options'        => array(
+        'all' => t('All'),
+        'id'  => t('Verb ID'),
+        'display_en_us' => t('English Display Value'),
+        'display'  => t('Display JSON Array'),
+        'json' => t('Verb JSON'),
+      ),
+    );
+    return $element;
+  }
+  
+  //Tincan Result
+  if($field['type'] == 'tincan_result') {
+    $display = $instance['display'][$view_mode];
+    $settings = $display['settings'];
+    $element = array();
+    $element['data_display'] = array(
+      '#type'           => 'select',                           // Use a select box widget
+      '#title'          => t('Data to Display'),                   // Widget label
+      '#description'    => t('Select which part of the verb object to display'), // Helper text
+      '#default_value'  => isset($settings['data_display']) ? $settings['data_display'] : 'all',              // Get the value if it's already been set
+      '#options'        => array(
+        'all' => t('All'),
+        'json' => t('Result JSON'),
+      ),
+    );
+    $element['duration_format'] = array(
+      '#type'           => 'select',                           // Use a select box widget
+      '#title'          => t('Duration Format'),                   // Widget label
+      '#description'    => t('Select format for duration component'), // Helper text
+      '#default_value'  => isset($settings['duration_format']) ? $settings['duration_format'] : 'raw',              // Get the value if it's already been set
+      '#options'        => array(
+        'raw' => t('Raw'),
+        'minutes'  => t('Interval (minutes)'),
+        'hours' => t('Interval (hours:minutes)'),
+        'days' => t('Interval days hours:minutes'),
+      ),
+    );
+    return $element;
+  }
+  
+  // Tincan Interaction Component 
+  if($field['type'] == 'tincan_interaction_component') {
+    //This gets the view_mode where our settings are stored
+    $display = $instance['display'][$view_mode];
+    // This gets the actual settings
+    $settings = $display['settings'];
+    // Initialize the element variable
+    $element = array();
+    // Add your select box
+    $element['data_display'] = array(
+      '#type'           => 'select',                           // Use a select box widget
+      '#title'          => t('Data to Display'),                   // Widget label
+      '#description'    => t('Select which part of the interaction component object to display'), // Helper text
+      '#default_value'  => isset($settings['data_display']) ? $settings['data_display'] : 'all',              // Get the value if it's already been set
+      '#options'        => array(
+        'all' => t('All'),
+        'id'  => t('ID'),
+        'description_en_us' => t('English Description'),
+        'description'  => t('Description JSON Array'),
+        'json' => t('Interaction Component JSON'),
+      ),
+    );
+    return $element;
+  }
+  
+  // Tincan Context
+  if($field['type'] == 'tincan_context') {
+    //This gets the view_mode where our settings are stored
+    $display = $instance['display'][$view_mode];
+    // This gets the actual settings
+    $settings = $display['settings'];
+    // Initialize the element variable
+    $element = array();
+    // Add your select box
+    $element['data_display'] = array(
+      '#type'           => 'select',                           // Use a select box widget
+      '#title'          => t('Data to Display'),                   // Widget label
+      '#description'    => t('Select which part of the context object to display'), // Helper text
+      '#default_value'  => isset($settings['data_display']) ? $settings['data_display'] : 'all',              // Get the value if it's already been set
+      '#options'        => array(
+        'all' => t('All'),
+        'json' => t('Context JSON'),
+      ),
+    );
+    return $element;
+  }
+  
+  // Tincan Object
+  if($field['type'] == 'tincan_object') {
+    //This gets the view_mode where our settings are stored
+    $display = $instance['display'][$view_mode];
+    // This gets the actual settings
+    $settings = $display['settings'];
+    // Initialize the element variable
+    $element = array();
+    // Add your select box
+    $element['data_display'] = array(
+      '#type'           => 'select',                           // Use a select box widget
+      '#title'          => t('Data to Display'),                   // Widget label
+      '#description'    => t('Select which part of the context object to display'), // Helper text
+      '#default_value'  => isset($settings['data_display']) ? $settings['data_display'] : 'all',              // Get the value if it's already been set
+      '#options'        => array(
+        'all' => t('All'),
+        'label' => t('Label'),
+        'json' => t('Object JSON'),
+      ),
+    );
+    return $element;
+  }
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function tincan_lrs_fieldtypes_field_formatter_settings_summary($field, $instance, $view_mode) {
+  // Tincan Verb
+  if($field['type'] == 'tincan_verb') {
+    $display = $instance['display'][$view_mode];
+    $settings = $display['settings'];
+    $summary = t('Data to display: @data', array(
+      '@data'     => isset($settings['data_display']) ? $settings['data_display'] : 'all',
+    )); // we use t() for translation and placeholders to guard against attacks
+    return $summary;
+  }
+  // Tincan Result
+  if($field['type'] == 'tincan_result') {
+    $display = $instance['display'][$view_mode];
+    $settings = $display['settings'];
+    $summary = t('Data to display: @data', array(
+      '@data'     => isset($settings['data_display']) ? $settings['data_display'] : 'all',
+    )); // we use t() for translation and placeholders to guard against attacks
+    $summary .= t(', Duration Format: @dur_format', array(
+      '@dur_format' => isset($settings['duration_format']) ? $settings['duration_format'] : 'raw',
+    ));
+    return $summary;
+  }
+  
+  // Tincan Interaction Component
+  if($field['type'] == 'tincan_interaction_component') {
+    $display = $instance['display'][$view_mode];
+    $settings = $display['settings'];
+    $summary = t('Data to display: @data', array(
+      '@data'     => isset($settings['data_display']) ? $settings['data_display'] : 'all',
+    )); // we use t() for translation and placeholders to guard against attacks
+    return $summary;
+  }
+  
+  // Tincan Context
+  if($field['type'] == 'tincan_context') {
+    $display = $instance['display'][$view_mode];
+    $settings = $display['settings'];
+    $summary = t('Data to display: @data', array(
+      '@data'     => isset($settings['data_display']) ? $settings['data_display'] : 'all',
+    )); // we use t() for translation and placeholders to guard against attacks
+    return $summary;
+  }
+  
+   // Tincan Object
+  if($field['type'] == 'tincan_object') {
+    $display = $instance['display'][$view_mode];
+    $settings = $display['settings'];
+    $summary = t('Data to display: @data', array(
+      '@data'     => isset($settings['data_display']) ? $settings['data_display'] : 'all',
+    )); // we use t() for translation and placeholders to guard against attacks
+    return $summary;
+  }
+  
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function tincan_lrs_fieldtypes_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  $settings = $display['settings'];
+  switch ($display['type']) {
+    // Tincan Verb
+    case 'tincan_verb_formatter':
+      foreach ($items as $delta => $item) {
+        $verb_id_html = $display_html = $display_english_html = $json_html = '';
+        if(isset($item['id'])) $verb_id_html = '<div class="tincan-verb-id"><strong>Verb ID: </strong>' . $item['id'] . '</div>';
+        if(isset($item['display'])) $display_html = '<div class="tincan-verb-display"><strong>Display Property: </strong>' . $item['display'] . '</div>';
+        if(isset($item['display_en_us'])) $display_english_html = '<div class="tincan-verb-display-english"><strong>English Display: </strong>' . $item['display_en_us'] . '</div>';
+        if(isset($item['json'])) $json_html = '<div class="tincan-verb-json"><strong>Verb JSON: </strong>' . $item['json'] . '</div>';
+        $data_display = isset($settings['data_display']) ? $settings['data_display'] : 'all';
+        switch($data_display) {
+          case 'all':
+            $element[$delta] = array(
+              '#markup' => $verb_id_html . $display_html . $display_english_html . $json_html,
+            );
+          break;
+          
+          case 'id':
+            $element[$delta] = array(
+              '#markup' => $verb_id_html ,
+            );
+          break;
+          
+          case 'display_en_us':
+            $element[$delta] = array(
+              '#markup' => $display_english_html,
+            );
+          break;
+          
+          case 'display':
+            $element[$delta] = array(
+              '#markup' => $display_html ,
+            );
+          break;
+          
+          case 'json':
+            $element[$delta] = array(
+              '#markup' => $json_html,
+            );
+          break;
+          
+        }
+      }
+    break; //end tincan_verb_formatter
+    // Tincan Result
+    case 'tincan_result_formatter':
+      foreach ($items as $delta => $item) {
+        $data_display = isset($settings['data_display']) ? $settings['data_display'] : 'all';
+        switch($data_display) {
+          case 'all':
+            $markup = '';
+            if(isset($item['score_scaled'])) $markup .= '<div class="tincan-result-score-scaled"><strong>Score Scaled: </strong>' . $item['score_scaled'] . '</div>';
+            if(isset($item['score_raw'])) $markup .= '<div class="tincan-result-score-raw"><strong>Score Raw: </strong>' . $item['score_raw'] . '</div>';
+            if(isset($item['score_min'])) $markup .= '<div class="tincan-result-score-min"><strong>Score Minimum: </strong>' . $item['score_min'] . '</div>';
+            if(isset($item['score_max'])) $markup .= '<div class="tincan-result-score-max"><strong>Score Maximum: </strong>' . $item['score_max'] . '</div>';
+            if(isset($item['success'])) {
+              $success = $item['success'] ? 'True' : 'False';
+              $markup .= '<div class="tincan-result-success"><strong>Success: </strong>' . $success . '</div>';
+            }
+            if(isset($item['completion'])) {
+              $completion = $item['completion'] ? 'True' : 'False';
+              $markup .= '<div class="tincan-result-completion"><strong>Completion: </strong>' . $completion . '</div>';
+            }
+            if(isset($item['response'])) $markup .= '<div class="tincan-result-response"><strong>Response: </strong>' . $item['response'] . '</div>';
+            
+            if(isset($item['duration'])) {
+              $duration_format = isset($display['settings']['duration_format']) ? $display['settings']['duration_format'] : 'raw';
+              
+              try{
+                //needed to use the custom object to get around php bug
+                //https://bugs.php.net/bug.php?id=53831&edit=1
+                $dv = new DateIntervalFractions($item['duration']);
+              } catch(Exception $e) {
+                dsm($e->getMessage());
+              }
+              $duration = $item['duration'];
+              switch($duration_format) {
+                case 'raw':
+                  $duration = $item['duration'];
+                  break;
+                case 'seconds':
+                  if(isset($dv)) {
+                    $duration = $dv->format('%s seconds');
+                  }
+                  break;
+                case 'minutes':
+                  if(isset($dv)) {
+                    $duration = $dv->format('%i minutes %s seconds');
+                  }
+                  break;
+                case 'hours':
+                  if(isset($dv)) {
+                    $duration = $dv->format('%h hours %i minutes %s seconds');
+                  }
+                  break;
+                case 'days':
+                  if(isset($dv)) {
+                    $duration = $dv->format('%d days %h hours %i minutes %s seconds');
+                  }
+                  break;
+              }
+              $markup .= '<div class="tincan-result-duration"><strong>Duration: </strong>' . $duration . '</div>';
+            }
+            
+            if(isset($item['extensions'])) $markup .= '<div class="tincan-result-extensions-json"><strong>Extensions JSON: </strong>' . $item['extensions'] . '</div>';
+            if(isset($item['score_json'])) $markup .= '<div class="tincan-result-score-json"><strong>Score JSON: </strong>' . $item['score_json'] . '</div>';
+            if(isset($item['json'])) $markup .= '<div class="tincan-result-json"><strong>Result JSON: </strong>' . $item['json'] . '</div>';
+            $element[$delta] = array(
+              '#markup' =>  $markup, 
+            );
+          break;
+       
+          case 'json':
+            $json_html = '';
+            if(isset($item['json'])) $json_html = '<div class="tincan-result-json"><strong>Result JSON: </strong>' . $item['json'] . '</div>';
+            $element[$delta] = array(
+              '#markup' => $json_html,
+            );
+          break;
+          
+        }
+      }
+    break; //end tincan_result_formatter
+    
+     // Tincan Interaction Component formatter
+    case 'tincan_interaction_component_formatter':
+      foreach ($items as $delta => $item) {
+        $id_html = $description_html = $description_english_html = $json_html = '';
+        if(isset($item['id'])) $id_html = '<div class="tincan-interaction-component-id"><strong>ID: </strong>' . $item['id'] . '</div>';
+        if(isset($item['description'])) $description_html = '<div class="tincan-verb-display"><strong>Display Property: </strong>' . $item['description'] . '</div>';
+        if(isset($item['description_en_us'])) $description_english_html = '<div class="tincan-interaction-component-description-english"><strong>Description: </strong>' . $item['description_en_us'] . '</div>';
+        if(isset($item['json'])) $json_html = '<div class="tincan-interaction-component-json"><strong>Interaction Component JSON: </strong>' . $item['json'] . '</div>';
+        $data_display = isset($settings['data_display']) ? $settings['data_display'] : 'all';
+        switch($data_display) {
+          case 'all':
+            $element[$delta] = array(
+              '#markup' => $id_html . $description_html . $description_english_html . $json_html,
+            );
+          break;
+          
+          case 'id':
+            $element[$delta] = array(
+              '#markup' => $id_html ,
+            );
+          break;
+          
+          case 'description_en_us':
+            $element[$delta] = array(
+              '#markup' => $description_english_html,
+            );
+          break;
+          
+          case 'description':
+            $element[$delta] = array(
+              '#markup' => $description_html ,
+            );
+          break;
+          
+          case 'json':
+            $element[$delta] = array(
+              '#markup' => $json_html,
+            );
+          break;
+          
+        }
+      }
+    break; //end tincan_interaction_component_formatter
+    
+    // Tincan Context formatter
+    case 'tincan_context_formatter':
+      foreach ($items as $delta => $item) {
+        $markup = ''; 
+        if(isset($item['registration'])) $markup .= '<div class="tincan-context-registration"><strong>Registration: </strong>' . $item['registration'] . '</div>';
+        if(isset($item['revision'])) $markup .= '<div class="tincan-context-revision"><strong>Revision: </strong>' . $item['revision'] . '</div>';
+        if(isset($item['platform'])) $markup .= '<div class="tincan-context-platform"><strong>Platform: </strong>' . $item['platform'] . '</div>';
+        if(isset($item['language'])) $markup .= '<div class="tincan-context-language"><strong>Language: </strong>' . $item['language'] . '</div>';
+        if(isset($item['statement_reference_object_type'])) $markup .= '<div class="tincan-context-statement-ref-object-type"><strong>Statement Reference Object Type: </strong>' . $item['statement_reference_object_type'] . '</div>';
+        if(isset($item['statement_reference_statement_id'])) $markup .= '<div class="tincan-context-statement-ref-statement-id"><strong>Statement Reference Statement ID: </strong>' . $item['statement_reference_statement_id'] . '</div>';
+        if(isset($item['extensions'])) $markup .= '<div class="tincan-context-extensions"><strong>Extensions: </strong>' . $item['extensions'] . '</div>';
+        if(isset($item['context_activities_json'])) $markup .= '<div class="tincan-context-activities-json"><strong>Context Activities JSON: </strong>' . $item['context_activities_json'] . '</div>';
+        if(isset($item['json']))  $markup .= '<div class="tincan-context-json"><strong>Context JSON: </strong>' . $item['json'] . '</div>';
+                
+        $data_display = isset($settings['data_display']) ? $settings['data_display'] : 'all';
+        switch($data_display) {
+          case 'all':
+            $element[$delta] = array(
+              '#markup' => $markup,
+            );
+          break;
+         
+          case 'json':
+            $json_html = '';
+            if(isset($item['json'])) $json_html = '<div class="tincan-context-json"><strong>Context JSON: </strong>' . $item['json'] . '</div>';
+            $element[$delta] = array(
+              '#markup' => $json_html,
+            );
+          break;
+          
+        }
+      }
+    break; //end tincan_context_formatter
+    
+    // Tincan Object formatter
+    case 'tincan_object_formatter':
+      foreach ($items as $delta => $item) {
+        $markup = ''; 
+        if(isset($item['object_type'])) $markup .= '<div class="tincan-object-type"><strong>Object Type: </strong>' . $item['object_type'] . '</div>';
+        if(isset($item['table'])) $markup .= '<div class="tincan-object-table"><strong>Object Entity Reference Table: </strong>' . $item['table'] . '</div>';
+        if(isset($item['target_id'])) $markup .= '<div class="tincan-object-entity-id"><strong>Object Entity Reference ID: </strong>' . $item['target_id'] . '</div>';
+        if(isset($item['json']))  $markup .= '<div class="tincan-object-json"><strong>Object JSON: </strong>' . $item['json'] . '</div>';
+                
+        $data_display = isset($settings['data_display']) ? $settings['data_display'] : 'all';
+        switch($data_display) {
+          case 'all':
+            $element[$delta] = array(
+              '#markup' => $markup,
+            );
+          break;
+          case 'label':
+            switch($item['table']) {
+            case 'tincan_activity':
+            case 'tincan_agent':
+              $label = entity_label($item['table'], $item['entity']);
+              break;
+            case 'statement_reference':
+              $label = $item['target_id'];
+              break;
+            case 'tincan_statement':
+              $label = entity_label($item['table'], $item['entity']);
+              break;
+            }
+            $element[$delta] = array(
+              '#markup' => check_plain($label),
+            );
+          break;
+          case 'json':
+            $json_html = '';
+            if(isset($item['json'])) $json_html = '<div class="tincan-context-json"><strong>Object JSON: </strong>' . $item['json'] . '</div>';
+            $element[$delta] = array(
+              '#markup' => $json_html,
+            );
+          break;
+          
+        }
+      }
+    break; //end tincan_object_formatter
+  }
+ 
+  return $element;
+}
+
+/**
+ * Implements hook_field_validate().
+ */
+ 
+ /*
+ * TODO: needa  way to have the field validation, but not on the field instance settings page for default values
+ */ 
+ 
+function tincan_lrs_fieldtypes_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors){
+ // Tincan verb validation
+ if($field['type'] == 'tincan_verb') {
+   foreach($items as $delta => $item) {
+     if(empty($item['id'])) {
+        $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'tincan_verb_id_missing',
+          'message' => t('Verb ID is required'),
+        );
+     }
+   }
+ } // end tincan verb validation
+ 
+ // Tincan result validation
+ if($field['type'] == 'tincan_result') {
+   foreach($items as $delta => $item) {
+   // Score Scaled item validation
+     if(!empty($item['score_scaled']) && ($item['score_scaled'] > 1 || $item['score_scaled'] < -1) ) {
+       $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'tincan_score_scale_range_error',
+          'message' => t('Score scaled must be between -1 and 1'),
+        );
+     }
+   // Score Raw item validation
+     if( (!empty($item['score_raw']) && !empty($item['score_max']) && !empty($item['score_min'])) && ($item['score_raw'] < $item['score_min'] || $item['score_raw'] > $item['score_max']) ) {
+       $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'tincan_score_raw_error',
+          'message' => t('Score Raw must be between the score min and score max values if they are present.'),
+        );
+     }
+   // Score min item validation
+     if( (!empty($item['score_min']) && !empty($item['score_max'])) && ($item['score_min'] >= $item['score_max']) ) {
+       $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'tincan_score_min_error',
+          'message' => t('Score Minimum must be less than score maximum value if it is present.'),
+        );
+     }
+   // Score min item validation
+     if( (!empty($item['score_min']) && !empty($item['score_max'])) && ($item['score_max'] <= $item['score_min']) ) {
+       $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'tincan_score_max_error',
+          'message' => t('Score Maximum must be greater than score minimum value if it is present.'),
+        );
+     }
+   }
+ } //end tincan result validation
+ 
+  // Tincan Interaction Component validation
+ if($field['type'] == 'tincan_interaction_component') {
+   foreach($items as $delta => $item) {
+     if(empty($item['id'])) {
+        $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'tincan_interaction_component_id_missing',
+          'message' => t('Interaction Component ID is required'),
+        );
+     }
+   }
+ } // end tincan interaction component validation
+ 
+ // Tincan Interaction Object validation
+ if($field['type'] == 'tincan_object') {
+   foreach($items as $delta => $item) {
+     if(empty($item['object_type'])) {
+        $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'tincan_object_object_type_missing',
+          'message' => t('Object Type is required'),
+        );
+     }
+     if(empty($item['table'])) {
+        $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'tincan_object_table_missing',
+          'message' => t('Entity reference table is required'),
+        );
+     }
+     if(empty($item['target_id'])) {
+        $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'tincan_object_target_id_missing',
+          'message' => t('Entity reference entity id is required'),
+        );
+     }
+   }
+ } // end tincan object validation
+}
+
+/**
+ * Implements hook_field_widget_error().
+ */
+function tincan_lrs_fieldtypes_field_widget_error($element, $error, $form, &$form_state){
+
+ switch($error['error']){
+   case 'tincan_verb_id_missing':
+     form_error($element['id'],$error['message']);
+   case 'tincan_score_scale_range_error':
+     form_error($element['score_scaled'],$error['message']);
+   case 'tincan_score_raw_error':
+     form_error($element['score_raw'],$error['message']);
+   case 'tincan_score_min_error':
+     form_error($element['score_min'],$error['message']);
+   case 'tincan_score_max_error':
+     form_error($element['score_max'],$error['message']);
+   case 'tincan_interaction_component_id_missing':
+     form_error($element['id'],$error['message']);
+   case 'tincan_object_object_type_missing':
+     form_error($element['object_type'],$error['message']);
+   case 'tincan_object_table_missing':
+     form_error($element['table'],$error['message']);
+   case 'tincan_object_target_id_missing':
+     form_error($element['target_id'],$error['message']);
+ }
+}
+
+/**
+ * Implements hook_field_formatter_prepare_view().
+ * Sniped from entity_reference_multiple module. Thanks!
+ */
+function tincan_lrs_fieldtypes_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items, $displays) {
+  if($field['type'] == 'tincan_object') {
+    $targets = array();
+
+    // Collect every possible entity attached to any of the entities.
+    foreach ($entities as $id => $entity) {
+      foreach ($items[$id] as $delta => $item) {
+        if (isset($item['target_id']) && isset($item['table'])) {
+          $targets[$item['table']][] = $item['target_id'];
+        }
+      }
+    }
+
+    $target_entities = array();
+    foreach ($targets as $target_type => $target_ids) {
+      if($target_type != 'statement_reference') {
+        $target_entities[$target_type] = entity_load($target_type, $target_ids);
+      }
+    }
+
+    // Iterate through the fieldable entities again to attach the loaded data.
+    foreach ($entities as $id => $entity) {
+      $rekey = FALSE;
+
+      foreach ($items[$id] as $delta => $item) {
+        // Check whether the referenced entity could be loaded.
+        if (isset($target_entities[$item['table']][$item['target_id']])) {
+          // Replace the instance value with the term data.
+          $items[$id][$delta]['entity'] = $target_entities[$item['table']][$item['target_id']];
+          // Check whether the user has access to the referenced entity.
+          $has_view_access = entity_access('view', $item['table'], $target_entities[$item['table']][$item['target_id']]);
+          //$has_update_access = entity_access('update', $item['table'], $target_entities[$item['table']][$item['target_id']]);
+          $items[$id][$delta]['access'] = ($has_view_access || $has_update_access);
+        }
+        // Otherwise, unset the instance value, since the entity does not exist.
+        else {
+        //  unset($items[$id][$delta]);
+          //$rekey = TRUE;
+        }
+      }
+
+      if ($rekey) {
+        // Rekey the items array.
+        $items[$id] = array_values($items[$id]);
+      }
+    } //end foreach entity
+    
+  } //end if tincan_object field
+}
+
+/*
+ * Class DateIntervalFractions
+ * https://bugs.php.net/bug.php?id=53831&edit=1
+ * necessary because of a php bug (remove sometime in future?)
+ */
+
+class DateIntervalFractions extends DateInterval {
+	public $milliseconds;
+	public function __construct($interval_spec) {
+		$this->milliseconds = 0;
+		$matches = array();
+		preg_match_all("#([0-9]*[.,]?[0-9]*)[S]#",$interval_spec,$matches);
+		foreach ($matches[0] as $result)
+		{
+			$original = $result;
+			list($seconds,$milliseconds) = explode(".",substr($result,0,-1));
+			$this->milliseconds = $milliseconds / pow(10,strlen($milliseconds) - 3);
+
+                        // Replace the milliseconds back to seconds,
+                        // and let the original constructor do the rest.
+			$interval_spec = str_replace($original,$seconds ."S",$interval_spec);
+		}
+		parent::__construct($interval_spec);
+	}
+}
